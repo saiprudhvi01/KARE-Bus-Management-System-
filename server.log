@@ -1,0 +1,20 @@
+nohup: ignoring input
+Attempting to connect to MongoDB...
+Connection String: Found
+/home/sai-prudhvi-bodempudi/Downloads/N-TRY-main/node_modules/express/lib/router/route.js:216
+        throw new Error(msg);
+        ^
+
+Error: Route.get() requires a callback function but got a [object Undefined]
+    at Route.<computed> [as get] (/home/sai-prudhvi-bodempudi/Downloads/N-TRY-main/node_modules/express/lib/router/route.js:216:15)
+    at proto.<computed> [as get] (/home/sai-prudhvi-bodempudi/Downloads/N-TRY-main/node_modules/express/lib/router/index.js:521:19)
+    at Object.<anonymous> (/home/sai-prudhvi-bodempudi/Downloads/N-TRY-main/routes/driver.js:9:8)
+    at Module._compile (node:internal/modules/cjs/loader:1356:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1414:10)
+    at Module.load (node:internal/modules/cjs/loader:1197:32)
+    at Module._load (node:internal/modules/cjs/loader:1013:12)
+    at Module.require (node:internal/modules/cjs/loader:1225:19)
+    at require (node:internal/modules/helpers:177:18)
+    at Object.<anonymous> (/home/sai-prudhvi-bodempudi/Downloads/N-TRY-main/app.js:62:22)
+
+Node.js v18.19.1

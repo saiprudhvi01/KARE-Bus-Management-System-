@@ -1,0 +1,275 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="container py-4">
+  <!-- Back Button -->
+  <div class="mb-4">
+    <a href="/student/buses" class="btn btn-outline-secondary">
+      <i class="fas fa-arrow-left me-2"></i> Back to Buses
+    </a>
+  </div>
+
+  <% if (bus) { %>
+    <!-- Bus Header -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h2 class="h4 mb-1">
+              <i class="fas fa-bus text-primary me-2"></i>
+              <%= bus.busName %>
+              <span class="badge bg-light text-dark ms-2">#<%= bus.busId %></span>
+            </h2>
+            <p class="text-muted mb-0">
+              <i class="fas fa-route me-1"></i> <%= bus.route || 'Route not specified' %>
+            </p>
+          </div>
+          <div class="dropdown">
+            <button class="btn btn-outline-secondary border-0" type="button" data-bs-toggle="dropdown">
+              <i class="fas fa-ellipsis-v"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li>
+                <a class="dropdown-item" href="/student/track/<%= bus._id %>">
+                  <i class="fas fa-map-marked-alt me-2"></i>Track on Map
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="/student/schedule?busId=<%= bus._id %>">
+                  <i class="far fa-calendar-alt me-2"></i>View Schedule
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="mt-4">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="text-muted small">Seat Availability</span>
+            <% const availableSeats = bus.capacity - (bus.passengers ? bus.passengers.length : 0); %>
+            <% const isFull = availableSeats <= 0; %>
+            <span class="badge bg-<%= isFull ? 'danger' : 'success' %>">
+              <%= availableSeats %> of <%= bus.capacity %> seats available
+            </span>
+          </div>
+          <div class="progress" style="height: 10px;">
+            <% const capacityPercent = Math.min(100, ((bus.passengers ? bus.passengers.length : 0) / bus.capacity) * 100); %>
+            <div class="progress-bar bg-<%= isFull ? 'danger' : 'success' %>" 
+                 role="progressbar" 
+                 style="width: <%= capacityPercent %>%"
+                 aria-valuenow="<%= capacityPercent %>" 
+                 aria-valuemin="0" 
+                 aria-valuemax="100">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bus Details -->
+    <div class="row">
+      <!-- Left Column -->
+      <div class="col-lg-8 mb-4">
+        <!-- Driver Info -->
+        <div class="card shadow-sm mb-4">
+          <div class="card-body">
+            <h5 class="card-title mb-3">
+              <i class="fas fa-user-tie text-primary me-2"></i>Driver Information
+            </h5>
+            <div class="d-flex align-items-center">
+              <div class="bg-light rounded-circle p-3 me-3">
+                <i class="fas fa-user-tie fa-2x text-primary"></i>
+              </div>
+              <div>
+                <h6 class="mb-1"><%= bus.driverName || 'Not assigned' %></h6>
+                <p class="text-muted mb-0 small">
+                  <i class="fas fa-phone-alt me-1"></i> 
+                  <%= bus.driverContact || 'Contact not available' %>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Current Location -->
+        <div class="card shadow-sm mb-4">
+          <div class="card-body">
+            <h5 class="card-title mb-3">
+              <i class="fas fa-map-marker-alt text-primary me-2"></i>Current Location
+            </h5>
+            <div class="d-flex align-items-center">
+              <div class="bg-light rounded-circle p-3 me-3">
+                <i class="fas fa-map-pin fa-2x text-primary"></i>
+              </div>
+              <div>
+                <h6 class="mb-1"><%= bus.currentLocation || 'Location not available' %></h6>
+                <p class="text-muted mb-0 small">
+                  <i class="far fa-clock me-1"></i> 
+                  Last updated: <%= new Date().toLocaleTimeString() %>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Next Trip -->
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title mb-3">
+              <i class="far fa-clock text-primary me-2"></i>Next Trip
+            </h5>
+            <% 
+              const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+              const today = days[new Date().getDay()];
+              const todaySchedules = bus.schedule && Array.isArray(bus.schedule) ? 
+                bus.schedule.filter(s => s.days && s.days.includes(today)) : [];
+              const nextSchedule = todaySchedules[0];
+            %>
+            
+            <% if (nextSchedule) { %>
+              <div class="d-flex align-items-center">
+                <div class="text-center me-4">
+                  <div class="display-6 fw-bold text-primary"><%= nextSchedule.time %></div>
+                  <div class="small text-muted"><%= today %></div>
+                </div>
+                <div class="vr mx-3"></div>
+                <div class="flex-grow-1">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="fw-medium"><%= nextSchedule.departure || '--' %></span>
+                    <span class="badge bg-primary rounded-pill">Departure</span>
+                  </div>
+                  <div class="small text-muted mb-3">
+                    <i class="fas fa-arrow-down text-xs me-1"></i> 
+                    <%= nextSchedule.arrival || '--' %>
+                  </div>
+                  <% if (nextSchedule.duration) { %>
+                    <div class="small text-muted">
+                      <i class="far fa-clock me-1"></i> 
+                      Duration: <%= nextSchedule.duration %>
+                    </div>
+                  <% } %>
+                </div>
+              </div>
+            <% } else { %>
+              <div class="alert alert-light mb-0">
+                <i class="far fa-calendar-times me-2"></i> No trips scheduled for today
+              </div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column -->
+      <div class="col-lg-4">
+        <!-- Quick Actions -->
+        <div class="card shadow-sm mb-4">
+          <div class="card-body">
+            <h5 class="card-title mb-3">
+              <i class="fas fa-bolt text-primary me-2"></i>Quick Actions
+            </h5>
+            <div class="d-grid gap-2">
+              <% if (!isFull) { %>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#requestBusModal">
+                  <i class="fas fa-bus me-2"></i>Request This Bus
+                </button>
+              <% } %>
+              <a href="/student/track/<%= bus._id %>" class="btn btn-primary">
+                <i class="fas fa-map-marked-alt me-2"></i>Track on Map
+              </a>
+              <a href="/student/schedule?busId=<%= bus._id %>" class="btn btn-outline-primary">
+                <i class="far fa-calendar-alt me-2"></i>View Full Schedule
+              </a>
+              <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#reportIssueModal">
+                <i class="fas fa-flag me-2"></i>Report Issue
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bus Specifications -->
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title mb-3">
+              <i class="fas fa-info-circle text-primary me-2"></i>Bus Information
+            </h5>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                <span><i class="fas fa-bus me-2 text-muted"></i> Bus Type</span>
+                <span class="fw-medium"><%= bus.busType || 'Standard' %></span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                <span><i class="fas fa-users me-2 text-muted"></i> Capacity</span>
+                <span class="fw-medium"><%= bus.capacity %> seats</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                <span><i class="fas fa-plug me-2 text-muted"></i> Amenities</span>
+                <div>
+                  <% const amenities = bus.amenities || []; %>
+                  <% if (amenities.length > 0) { %>
+                    <% amenities.forEach(amenity => { %>
+                      <span class="badge bg-light text-dark me-1"><%= amenity %></span>
+                    <% }); %>
+                  <% } else { %>
+                    <span class="text-muted small">None</span>
+                  <% } %>
+                </div>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                <span><i class="fas fa-id-card me-2 text-muted"></i> Registration</span>
+                <span class="fw-medium"><%= bus.registrationNumber || 'N/A' %></span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% } else { %>
+    <div class="alert alert-danger">
+      <i class="fas fa-exclamation-circle me-2"></i> Bus not found or no longer available.
+    </div>
+  <% } %>
+</div>
+
+<!-- Report Issue Modal -->
+<div class="modal fade" id="reportIssueModal" tabindex="-1" aria-labelledby="reportIssueModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="reportIssueModalLabel">
+          <i class="fas fa-exclamation-triangle me-2"></i>Report an Issue
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="/student/report-issue" method="POST">
+        <div class="modal-body">
+          <input type="hidden" name="busId" value="<%= bus ? bus._id : '' %>">
+          <div class="mb-3">
+            <label for="issueType" class="form-label">Issue Type</label>
+            <select class="form-select" id="issueType" name="issueType" required>
+              <option value="">Select issue type</option>
+              <option value="delay">Bus Delay</option>
+              <option value="breakdown">Bus Breakdown</option>
+              <option value="cleanliness">Cleanliness Issue</option>
+              <option value="driver">Driver Behavior</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="issueDescription" class="form-label">Description</label>
+            <textarea class="form-control" id="issueDescription" name="description" rows="3" 
+                      placeholder="Please describe the issue in detail..." required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-danger">
+            <i class="fas fa-paper-plane me-1"></i> Submit Report
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
