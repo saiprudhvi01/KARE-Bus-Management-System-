@@ -14,6 +14,7 @@ if (missingVars.length > 0 && process.env.NODE_ENV !== 'test') {
 const googleOAuthConfig = {
     clientId: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+<<<<<<< HEAD
     redirectUri: process.env.NODE_ENV === 'production'
         ? "https://KARE-Bus-Management-System.onrender.com/auth/google/callback"
         : "http://localhost:3000/auth/google/callback",
