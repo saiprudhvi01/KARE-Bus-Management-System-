@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: bus-management
+    env: node
+    buildCommand: ./build.sh
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: NODE_ENV
+        value: production
+      # Add other environment variables here
+      # - key: MONGODB_URI
+      #   value: your-mongodb-uri
+      # - key: SESSION_SECRET
+      #   generateValue: true

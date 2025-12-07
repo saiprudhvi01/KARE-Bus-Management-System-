@@ -1,0 +1,20 @@
+# Python version specification
+python_version = "3.13"
+
+# Runtime dependencies
+nodejs >= 16.0.0
+
+# Build dependencies for Node.js packages
+python >= 3.13.0
+
+# Required for some Node.js native modules
+gcc
+g++
+make
+
+# Python dependencies (if any Python services are needed)
+# flask==2.0.1
+# pymongo==4.0.1
+
+# Note: The main application dependencies are managed by package.json
+# Node.js dependencies will be installed using npm during the build process

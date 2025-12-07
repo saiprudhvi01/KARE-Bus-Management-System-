@@ -1,0 +1,320 @@
+<%- include('../partials/header', { title: 'Reports | Bus Management' }) %>
+<%- include('../partials/navbar-management') %>
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Reports & Analytics</h2>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" onclick="exportReport('pdf')">Export as PDF</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="exportReport('excel')">Export as Excel</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="exportReport('csv')">Export as CSV</a></li>
+                    </ul>
+                    <button class="btn btn-primary ms-2" onclick="refreshReports()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Date Range Picker -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form id="reportFilterForm" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="startDate" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="startDate" name="startDate">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="endDate" class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="endDate" name="endDate">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="reportType" class="form-label">Report Type</label>
+                            <select class="form-select" id="reportType" name="reportType">
+                                <option value="overview">Overview</option>
+                                <option value="buses">Buses</option>
+                                <option value="routes">Routes</option>
+                                <option value="drivers">Drivers</option>
+                                <option value="maintenance">Maintenance</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-filter"></i> Filter
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-primary text-white h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title text-white-50">Active Buses</h6>
+                                    <h2 class="mb-0"><%= summary.activeBuses || 0 %></h2>
+                                </div>
+                                <i class="fas fa-bus fa-3x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-success text-white h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title text-white-50">Total Trips</h6>
+                                    <h2 class="mb-0"><%= summary.totalTrips || 0 %></h2>
+                                </div>
+                                <i class="fas fa-route fa-3x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-warning text-dark h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title">Maintenance Due</h6>
+                                    <h2 class="mb-0"><%= summary.maintenanceDue || 0 %></h2>
+                                </div>
+                                <i class="fas fa-tools fa-3x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-info text-white h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title text-white-50">Active Routes</h6>
+                                    <h2 class="mb-0"><%= summary.activeRoutes || 0 %></h2>
+                                </div>
+                                <i class="fas fa-map-marked-alt fa-3x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Report Content -->
+            <div class="row">
+                <!-- Left Column -->
+                <div class="col-lg-8">
+                    <!-- Chart -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Bus Utilization</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="utilizationChart" height="300"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activities -->
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Recent Activities</h5>
+                            <a href="/management/activities" class="btn btn-sm btn-outline-primary">View All</a>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="list-group list-group-flush">
+                                <% if (activities && activities.length > 0) { %>
+                                    <% activities.forEach(activity => { %>
+                                        <div class="list-group-item">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1"><%= activity.title %></h6>
+                                                <small class="text-muted">
+                                                    <%= new Date(activity.timestamp).toLocaleString() %>
+                                                </small>
+                                            </div>
+                                            <p class="mb-1"><%= activity.description %></p>
+                                            <small class="text-muted"><%= activity.user || 'System' %></small>
+                                        </div>
+                                    <% }); %>
+                                <% } else { %>
+                                    <div class="text-center p-4">
+                                        <p class="text-muted mb-0">No recent activities found</p>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="col-lg-4">
+                    <!-- Maintenance Alerts -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="card-title mb-0">Maintenance Alerts</h5>
+                        </div>
+                        <div class="list-group list-group-flush">
+                            <% if (alerts && alerts.length > 0) { %>
+                                <% alerts.forEach(alert => { %>
+                                    <div class="list-group-item">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h6 class="mb-1"><%= alert.title %></h6>
+                                            <span class="badge bg-<%= alert.severity === 'high' ? 'danger' : 'warning' %>">
+                                                <%= alert.severity.toUpperCase() %>
+                                            </span>
+                                        </div>
+                                        <p class="mb-1"><%= alert.message %></p>
+                                        <small class="text-muted">
+                                            <%= new Date(alert.date).toLocaleDateString() %>
+                                            <% if (alert.bus) { %>
+                                                • <%= alert.bus %>
+                                            <% } %>
+                                        </small>
+                                    </div>
+                                <% }); %>
+                            <% } else { %>
+                                <div class="text-center p-4">
+                                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                                    <p class="text-muted mb-0">No active maintenance alerts</p>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Quick Stats</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Bus Utilization</span>
+                                    <span><%= stats.busUtilization || 0 %>%</span>
+                                </div>
+                                <div class="progress" style="height: 10px;">
+                                    <div class="progress-bar bg-primary" role="progressbar" 
+                                         style="width: <%= stats.busUtilization || 0 %>%" 
+                                         aria-valuenow="<%= stats.busUtilization || 0 %>" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>On-time Performance</span>
+                                    <span><%= stats.onTimePercentage || 0 %>%</span>
+                                </div>
+                                <div class="progress" style="height: 10px;">
+                                    <div class="progress-bar bg-success" role="progressbar" 
+                                         style="width: <%= stats.onTimePercentage || 0 %>%" 
+                                         aria-valuenow="<%= stats.onTimePercentage || 0 %>" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Fuel Efficiency</span>
+                                    <span><%= stats.fuelEfficiency || 0 %> km/L</span>
+                                </div>
+                                <div class="progress" style="height: 10px;">
+                                    <div class="progress-bar bg-info" role="progressbar" 
+                                         style="width: <%= Math.min(stats.fuelEfficiency || 0, 100) %>%" 
+                                         aria-valuenow="<%= stats.fuelEfficiency || 0 %>" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Initialize date pickers
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default date range (last 30 days)
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 30);
+    
+    document.getElementById('startDate').valueAsDate = startDate;
+    document.getElementById('endDate').valueAsDate = endDate;
+    
+    // Initialize charts
+    initCharts();
+});
+
+// Initialize charts
+function initCharts() {
+    const ctx = document.getElementById('utilizationChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            datasets: [{
+                label: 'Bus Utilization (%)',
+                data: [65, 59, 80, 81, 56, 55, 40],
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: 'Utilization (%)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Day of Week'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Export report
+function exportReport(format) {
+    const form = document.getElementById('reportFilterForm');
+    const formData = new FormData(form);
+    const params = new URLSearchParams(formData).toString();
+    
+    // In a real app, this would generate and download the report
+    alert(`Exporting report as ${format.toUpperCase()} with filters:\n${params}`);
+    // window.location.href = `/api/reports/export?format=${format}&${params}`;
+}
+
+// Refresh reports
+function refreshReports() {
+    // In a real app, this would reload the report data
+    window.location.reload();
+}
+</script>
+
+<%- include('../partials/footer') %>
