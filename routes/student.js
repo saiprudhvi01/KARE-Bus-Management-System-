@@ -87,11 +87,11 @@ router.get('/dashboard', ensureStudent, async (req, res) => {
 // List all available buses
 router.get('/buses', ensureStudent, async (req, res) => {
   try {
-    const buses = await Bus.find({ isActive: true }).lean();
+    const buses = await Bus.find({ isActive: true });
     
-    // Add passenger count to each bus
+    // Convert buses to plain objects with passenger count
     const busesWithPassengerCount = buses.map(bus => ({
-      ...bus,
+      ...bus.toObject(),
       passengerCount: bus.passengers ? bus.passengers.length : 0
     }));
     
