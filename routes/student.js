@@ -13,7 +13,7 @@ router.get('/dashboard', ensureStudent, async (req, res) => {
   try {
     // Fetch active buses with necessary fields for the dropdown
     const buses = await Bus.find({ isActive: true })
-      .select('_id busName busId route isActive')
+      .populate('passengers', '_id name email')
       .lean();
     
     // Fetch today's day

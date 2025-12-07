@@ -195,6 +195,7 @@
                     <th>Bus</th>
                     <th>Departure</th>
                     <th>Route</th>
+                    <th>Seats</th>
                     <th>Status</th>
                     <th>Actions</th>
                   </tr>
@@ -214,6 +215,16 @@
                       <td><%= bus.busName %> (#<%= bus.busId %>)</td>
                       <td><%= scheduleToShow.time || 'N/A' %></td>
                       <td><%= bus.route %></td>
+                      <td>
+                        <% 
+                          const passengerCount = bus.passengers ? bus.passengers.length : 0;
+                          const availableSeats = bus.capacity - passengerCount;
+                          const isFull = availableSeats <= 0;
+                        %>
+                        <span class="badge bg-<%= isFull ? 'danger' : 'success' %>">
+                          <%= passengerCount %>/<%= bus.capacity %> seats
+                        </span>
+                      </td>
                       <td>
                         <% if (bus.isActive) { %>
                           <span class="badge bg-success">Active</span>
