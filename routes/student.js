@@ -11,8 +11,8 @@ const BusRequest = require('../models/BusRequest');
 // Student Dashboard
 router.get('/dashboard', ensureStudent, async (req, res) => {
   try {
-    // Fetch active buses with necessary fields for the dropdown
-    const buses = await Bus.find({ isActive: true })
+    // Fetch all active buses (for dropdown and count)
+    const allBuses = await Bus.find({ isActive: true })
       .populate('passengers', '_id name email')
       .lean();
     
@@ -20,8 +20,8 @@ router.get('/dashboard', ensureStudent, async (req, res) => {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const today = days[new Date().getDay()];
     
-    // Filter buses with schedules for today
-    const busesWithScheduleToday = buses.filter(bus => {
+    // Filter buses with schedules for today (for schedule display)
+    const busesWithScheduleToday = allBuses.filter(bus => {
       if (!bus.schedule || bus.schedule.length === 0) return false;
       return bus.schedule.some(schedule => schedule.days && schedule.days.includes(today));
     });
@@ -69,8 +69,8 @@ router.get('/dashboard', ensureStudent, async (req, res) => {
     res.render('student/dashboard', {
       title: 'Student Dashboard',
       user: userData,
-      buses: buses,  // This will be used in the feedback form
-      busesCount: buses.length,
+      buses: allBuses,  // This will be used in the feedback form
+      busesCount: allBuses.length,
       busesWithScheduleToday: busesWithScheduleToday,  // For the bus schedule section
       currentDate: new Date().toISOString().split('T')[0]  // For any date-related functionality
     });
