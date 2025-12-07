@@ -13,7 +13,6 @@ router.get('/dashboard', ensureStudent, async (req, res) => {
   try {
     // Fetch all active buses (for dropdown and count)
     const allBuses = await Bus.find({ isActive: true })
-      .populate('passengers', '_id name email')
       .lean();
     
     // Fetch today's day
