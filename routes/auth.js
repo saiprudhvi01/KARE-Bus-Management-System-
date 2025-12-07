@@ -260,8 +260,8 @@ router.post('/login/management', async (req, res) => {
     }
     
     // Static credentials check (can be moved to environment variables)
-    const adminEmail = process.env.ADMIN_EMAIL || 'dms_admin@gmail.com';
-    const adminPassword = process.env.ADMIN_PASSWORD || 'nikhil';
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@gmail.com';
+    const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
     
     if (email !== adminEmail || password !== adminPassword) {
       req.flash('error_msg', 'Invalid email or password');

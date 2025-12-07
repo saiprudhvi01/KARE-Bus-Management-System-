@@ -13,11 +13,17 @@ const Complaint = require('../models/Complaint');
 // Management Dashboard
 router.get('/dashboard', async (req, res) => {
   try {
-    // Fetch buses to display on map and dashboard
+    // Fetch all data for management dashboard
     const buses = await Bus.find({});
+    const students = await User.find({ role: 'student' });
+    const feedbacks = await Feedback.find({}).populate('busId', 'busName busId').populate('studentId', 'name studentId');
+    const complaints = await Complaint.find({}).populate('busId', 'busName busId').populate('studentId', 'name studentId');
     
-    // Fetch student count
-    const studentCount = await User.countDocuments({ role: 'student' });
+    // Get counts
+    const busCount = buses.length;
+    const studentCount = students.length;
+    const feedbackCount = feedbacks.length;
+    const complaintCount = complaints.length;
     
     // Collect unique routes
     const routes = [...new Set(buses.map(bus => bus.route))].filter(Boolean);
@@ -25,37 +31,29 @@ router.get('/dashboard', async (req, res) => {
     // Create empty reports array (can be populated with real reports later)
     const reports = [];
     
-    // Collect and process all feedback
-    let allFeedback = [];
-    let studentComplaints = [];
+    // Process feedback from Feedback model
+    const allFeedback = feedbacks.map(feedback => ({
+      _id: feedback._id,
+      subject: feedback.subject,
+      message: feedback.message,
+      studentName: feedback.studentName,
+      studentId: feedback.studentId,
+      busName: feedback.busName,
+      busId: feedback.busId,
+      rating: feedback.rating || 0,
+      timestamp: feedback.createdAt,
+      status: feedback.status,
+      isAnonymous: feedback.isAnonymous,
+      bus: feedback.busId ? {
+        busId: feedback.busId.busId,
+        busName: feedback.busId.busName,
+        _id: feedback.busId._id
+      } : null
+    }));
     
-    // Process each bus to extract feedback
-    for (const bus of buses) {
-      if (bus.feedback && bus.feedback.length > 0) {
-        // Add bus info to each feedback item for context
-        const busInfo = {
-          busId: bus.busId,
-          busName: bus.busName,
-          driverName: bus.driverName,
-          _id: bus._id
-        };
-        
-        // Process each feedback item
-        bus.feedback.forEach(item => {
-          const feedbackWithBus = {
-            ...item.toObject(),
-            bus: busInfo
-          };
-          
-          // Separate into complaints (rating ≤ 3) and positive feedback
-          if (item.rating <= 3) {
-            studentComplaints.push(feedbackWithBus);
-          } else {
-            allFeedback.push(feedbackWithBus);
-          }
-        });
-      }
-    }
+    // Separate into complaints (rating ≤ 3) and positive feedback
+    const studentComplaints = allFeedback.filter(item => item.rating <= 3);
+    const positiveFeedback = allFeedback.filter(item => item.rating > 3);
     
     // Sort feedback by timestamp (newest first)
     allFeedback.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -65,12 +63,16 @@ router.get('/dashboard', async (req, res) => {
     res.render('management/dashboard', { 
       title: 'Management Dashboard',
       buses,
+      students,
       feedback: allFeedback,
       complaints: studentComplaints,
       studentCount,
+      busCount,
+      feedbackCount,
+      complaintCount,
       routes,
       reports,
-      user: req.user
+      user: req.session.user
     });
   } catch (err) {
     console.error('Error loading dashboard:', err);

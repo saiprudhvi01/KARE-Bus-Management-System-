@@ -6,6 +6,7 @@ const Bus = require('../models/Bus');
 const User = require('../models/User');
 const Feedback = require('../models/Feedback');
 const Complaint = require('../models/Complaint');
+const BusRequest = require('../models/BusRequest');
 
 // Student Dashboard
 router.get('/dashboard', ensureStudent, async (req, res) => {
@@ -25,27 +26,43 @@ router.get('/dashboard', ensureStudent, async (req, res) => {
       return bus.schedule.some(schedule => schedule.days && schedule.days.includes(today));
     });
     
-    // Get user with populated bus assignment and request
+    // Get user with populated bus assignment and requests
     const user = await User.findById(req.session.user.id)
-      .populate('assignedBus', 'busName route driverName')
-      .populate({
-        path: 'busRequests',
-        match: { status: 'pending' },
-        options: { sort: { requestedAt: -1 }, limit: 1 },
-        populate: {
-          path: 'bus',
-          select: 'busName route'
-        }
-      });
+      .populate('assignedBus', 'busName route driverName');
+    
+    // Get pending requests
+    const pendingRequests = await BusRequest.find({
+      student: req.session.user.id,
+      status: 'pending'
+    })
+    .populate('bus', 'busName route')
+    .sort({ createdAt: -1 });
+    
+    // Get accepted requests
+    const acceptedRequests = await BusRequest.find({
+      student: req.session.user.id,
+      status: 'accepted'
+    })
+    .populate('bus', 'busName route driverName')
+    .sort({ responseTime: -1 });
     
     // Format user data for the view
     const userData = {
       ...user.toObject(),
-      pendingBusRequest: user.busRequests && user.busRequests.length > 0 ? {
-        _id: user.busRequests[0]._id,
-        busName: user.busRequests[0].bus.busName,
-        route: user.busRequests[0].bus.route,
-        requestedAt: user.busRequests[0].requestedAt
+      pendingBusRequest: pendingRequests.length > 0 ? {
+        _id: pendingRequests[0]._id,
+        busName: pendingRequests[0].bus.busName,
+        route: pendingRequests[0].bus.route,
+        requestedAt: pendingRequests[0].createdAt,
+        boardingStop: pendingRequests[0].boardingStop
+      } : null,
+      acceptedBusRequest: acceptedRequests.length > 0 ? {
+        _id: acceptedRequests[0]._id,
+        busName: acceptedRequests[0].bus.busName,
+        route: acceptedRequests[0].bus.route,
+        driverName: acceptedRequests[0].bus.driverName,
+        acceptedAt: acceptedRequests[0].responseTime,
+        boardingStop: acceptedRequests[0].boardingStop
       } : null
     };
     
@@ -346,32 +363,32 @@ router.post('/send-feedback', ensureStudent, async (req, res) => {
   try {
     const { busId, subject, message, isAnonymous } = req.body;
     
-    // Create new feedback document with minimal required fields
-    const feedback = new Feedback({
+    let feedbackData = {
       subject,
       message,
-      studentId: req.session.user._id,
+      studentId: req.session.user.id,
       studentName: isAnonymous ? 'Anonymous Student' : req.session.user.name,
       isAnonymous: !!isAnonymous,
-      busId: null, // Set default values to avoid validation errors
+      busId: null,
       busName: 'General Feedback',
       busNumber: 'N/A',
-      driverId: null, // Set to null by default - will update if bus exists
+      driverId: null,
       driverName: 'N/A'
-    });
+    };
     
     // If bus is specified, add bus name and driver info
     if (busId) {
       const bus = await Bus.findById(busId);
       if (bus) {
-        feedback.busId = bus._id;
-        feedback.busName = bus.name || bus.busName;
-        feedback.busNumber = bus.busNumber;
-        feedback.driverId = bus.driverId || bus._id; // Use bus ID as driver ID if not specified
-        feedback.driverName = bus.driverName;
+        feedbackData.busId = bus._id;
+        feedbackData.busName = bus.busName;
+        feedbackData.busNumber = bus.busId;
+        feedbackData.driverId = bus.driver;
+        feedbackData.driverName = bus.driverName;
       }
     }
     
+    const feedback = new Feedback(feedbackData);
     await feedback.save();
     
     return res.json({
@@ -462,4 +479,55 @@ router.get('/api/all-bus-locations', ensureStudent, async (req, res) => {
   }
 });
 
-module.exports = router; 
+// Book Bus (create bus request)
+router.post('/book-bus', ensureStudent, async (req, res) => {
+  try {
+    const { busId, boardingStop, destination } = req.body;
+    
+    // Validate input
+    if (!busId || !boardingStop || !destination) {
+      req.flash('error_msg', 'Please provide all required fields');
+      return res.redirect('/student/dashboard');
+    }
+    
+    // Check if bus exists
+    const bus = await Bus.findById(busId);
+    if (!bus) {
+      req.flash('error_msg', 'Bus not found');
+      return res.redirect('/student/dashboard');
+    }
+    
+    // Check for existing pending request
+    const existingRequest = await BusRequest.findOne({
+      student: req.session.user.id,
+      bus: busId,
+      status: 'pending'
+    });
+    
+    if (existingRequest) {
+      req.flash('error_msg', 'You already have a pending request for this bus');
+      return res.redirect('/student/dashboard');
+    }
+    
+    // Create new bus request
+    const newRequest = new BusRequest({
+      student: req.session.user.id,
+      bus: busId,
+      boardingStop,
+      destination,
+      driver: bus.driver
+    });
+    
+    await newRequest.save();
+    
+    req.flash('success_msg', 'Bus request submitted successfully');
+    res.redirect('/student/dashboard');
+    
+  } catch (error) {
+    console.error('Error booking bus:', error);
+    req.flash('error_msg', 'Failed to submit bus request');
+    res.redirect('/student/dashboard');
+  }
+});
+
+module.exports = router;

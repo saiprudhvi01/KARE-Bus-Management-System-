@@ -54,12 +54,36 @@
                 </div>
               </div>
             </div>
+          <% } else if (user.acceptedBusRequest) { %>
+            <div class="alert alert-success">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h5><i class="fas fa-check-circle me-2"></i> Bus Request Accepted</h5>
+                  <p class="mb-0">Bus: <strong><%= user.acceptedBusRequest.busName %></strong></p>
+                  <p class="mb-0">Route: <%= user.acceptedBusRequest.route %></p>
+                  <p class="mb-0">Driver: <%= user.acceptedBusRequest.driverName %></p>
+                  <p class="mb-0">Boarding Stop: <%= user.acceptedBusRequest.boardingStop %></p>
+                  <p class="mb-0">Accepted on: <%= new Date(user.acceptedBusRequest.acceptedAt).toLocaleString() %></p>
+                  <p class="mb-0">Status: <span class="badge bg-success">Active</span></p>
+                </div>
+                <div class="text-end">
+                  <a href="/student/track/<%= user.acceptedBusRequest.busName %>" class="btn btn-primary btn-sm me-2">
+                    <i class="fas fa-map-marker-alt me-1"></i> Track Bus
+                  </a>
+                  <a href="/student/feedback/<%= user.acceptedBusRequest.busName %>" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-comment me-1"></i> Feedback
+                  </a>
+                </div>
+              </div>
+            </div>
           <% } else if (user.pendingBusRequest) { %>
             <div class="alert alert-warning">
               <div class="d-flex justify-content-between align-items-center">
                 <div>
                   <h5><i class="fas fa-clock me-2"></i> Pending Request</h5>
                   <p class="mb-0">Bus: <strong><%= user.pendingBusRequest.busName %></strong></p>
+                  <p class="mb-0">Route: <%= user.pendingBusRequest.route %></p>
+                  <p class="mb-0">Boarding Stop: <%= user.pendingBusRequest.boardingStop %></p>
                   <p class="mb-0">Requested on: <%= new Date(user.pendingBusRequest.requestedAt).toLocaleString() %></p>
                   <p class="mb-0">Status: <span class="badge bg-warning">Pending Approval</span></p>
                 </div>

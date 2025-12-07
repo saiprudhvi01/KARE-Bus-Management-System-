@@ -48,7 +48,7 @@
                     <span class="badge bg-light text-dark ms-2">#<%= bus.busId %></span>
                   </div>
                   <div class="mt-3">
-                    <a href="/student/track/<%= bus._id %>" class="btn btn-primary btn-sm w-100">
+                    <a href="/student/track/<%= bus.busId %>" class="btn btn-primary btn-sm w-100">
                       <i class="fas fa-map-marked-alt me-1"></i> Track Current Bus
                     </a>
                     <% if (bus.stops && bus.stops.length > 0) { %>
@@ -149,7 +149,7 @@
                    <!-- Card Footer -->
                    <div class="card-footer bg-white border-top-0 pt-0">
                      <div class="d-grid gap-2">
-                       <a href="/student/bus-details/<%= bus._id %>" 
+                       <a href="/student/bus/<%= bus._id %>" 
                           class="btn btn-<%= isFull ? 'outline-danger' : 'primary' %>">
                          <i class="fas fa-<%= isFull ? 'exclamation-circle' : 'info-circle' %> me-2"></i>
                          <%= isFull ? 'Bus Full' : 'View Details' %>
