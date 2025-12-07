@@ -115,6 +115,31 @@ router.post('/:requestId/accept', ensureDriverAPI, async (req, res) => {
         request.responseTime = new Date();
         await request.save();
 
+        // Update bus passenger count
+        const bus = await Bus.findById(request.bus);
+        if (bus) {
+            // Add student to passengers array if not already there
+            if (!bus.passengers) {
+                bus.passengers = [];
+            }
+            
+            const studentExists = bus.passengers.some(passenger => 
+                passenger.studentId && passenger.studentId.toString() === request.student._id.toString()
+            );
+            
+            if (!studentExists) {
+                bus.passengers.push({
+                    studentId: request.student._id,
+                    studentName: request.student.name,
+                    boardingStop: request.boardingStop,
+                    destination: request.destination,
+                    boardedAt: new Date()
+                });
+                
+                await bus.save();
+            }
+        }
+
         // In a real app, you might want to send a notification to the student here
 
         res.json({ 
@@ -307,12 +332,15 @@ router.delete('/:requestId', ensureStudentAPI, async (req, res) => {
             });
         }
 
-        // Only allow cancellation of pending requests
-        if (request.status !== 'pending') {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Only pending requests can be cancelled' 
-            });
+        // If request was accepted, remove student from bus passengers
+        if (request.status === 'accepted') {
+            const bus = await Bus.findById(request.bus);
+            if (bus && bus.passengers) {
+                bus.passengers = bus.passengers.filter(passenger => 
+                    !(passenger.studentId && passenger.studentId.toString() === request.student.toString())
+                );
+                await bus.save();
+            }
         }
 
         // Remove the request
