@@ -49,11 +49,8 @@ router.post('/request', ensureStudentAPI, async (req, res) => {
         // Populate student details for the response
         await newRequest.populate('student', 'name email studentId');
         
-        res.status(201).json({ 
-            success: true, 
-            message: 'Bus request submitted successfully',
-            request: newRequest
-        });
+        req.flash('success_msg', 'Bus request submitted successfully');
+        res.redirect('/student/dashboard');
 
     } catch (error) {
         console.error('Error creating bus request:', error);

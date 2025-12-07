@@ -6,6 +6,7 @@ const Bus = require('../models/Bus');
 const User = require('../models/User');
 const Feedback = require('../models/Feedback');
 const Complaint = require('../models/Complaint');
+const BusRequest = require('../models/BusRequest');
 
 // Import any additional models if needed
 // const Route = require('../models/Route');
@@ -619,4 +620,26 @@ router.get('/reports/export', ensureManagement, async (req, res) => {
   }
 });
 
-module.exports = router; 
+// Manage Bus Bookings
+router.get('/bookings', ensureManagement, async (req, res) => {
+  try {
+    // Fetch all bus requests with populated data
+    const bookings = await BusRequest.find({})
+      .populate('student', 'name email studentId department')
+      .populate('bus', 'busName busId route driverName')
+      .populate('driver', 'name email')
+      .sort({ createdAt: -1 });
+    
+    res.render('management/bookings', {
+      title: 'Bus Bookings',
+      user: req.session.user,
+      bookings
+    });
+  } catch (err) {
+    console.error('Error fetching bookings:', err);
+    req.flash('error_msg', 'Failed to fetch bookings');
+    res.redirect('/management/dashboard');
+  }
+});
+
+module.exports = router;

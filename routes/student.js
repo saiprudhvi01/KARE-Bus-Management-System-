@@ -391,10 +391,8 @@ router.post('/send-feedback', ensureStudent, async (req, res) => {
     const feedback = new Feedback(feedbackData);
     await feedback.save();
     
-    return res.json({
-      success: true,
-      message: 'Your feedback has been submitted successfully!'
-    });
+    req.flash('success_msg', 'Your feedback has been submitted successfully!');
+    return res.redirect('/student/dashboard');
   } catch (error) {
     console.error('Error sending feedback:', error);
     return res.status(500).json({
@@ -440,10 +438,8 @@ router.post('/send-complaint', ensureStudent, async (req, res) => {
     
     await complaint.save();
     
-    return res.json({
-      success: true,
-      message: 'Your complaint has been submitted successfully!'
-    });
+    req.flash('success_msg', 'Your complaint has been submitted successfully!');
+    return res.redirect('/student/dashboard');
   } catch (error) {
     console.error('Error sending complaint:', error);
     return res.status(500).json({

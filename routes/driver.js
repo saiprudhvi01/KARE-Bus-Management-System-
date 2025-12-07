@@ -135,11 +135,24 @@ router.post('/update-location', ensureDriver, async (req, res) => {
 });
 
 // Driver Profile
-router.get('/profile', ensureDriver, (req, res) => {
-  res.render('driver/profile', {
-    title: 'My Profile',
-    user: req.session.user
-  });
+router.get('/profile', ensureDriver, async (req, res) => {
+  try {
+    // Fetch bus data for the driver
+    const bus = await Bus.findOne({ driver: req.session.user.id });
+    
+    res.render('driver/profile', {
+      title: 'My Profile',
+      user: req.session.user,
+      bus: bus
+    });
+  } catch (err) {
+    console.error('Error loading driver profile:', err);
+    res.render('driver/profile', {
+      title: 'My Profile',
+      user: req.session.user,
+      bus: null
+    });
+  }
 });
 
 // View all feedback
