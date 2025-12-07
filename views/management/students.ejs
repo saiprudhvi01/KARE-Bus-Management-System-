@@ -1,0 +1,173 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar-management') %>
+
+<div class="container py-4">
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 mb-1">Manage Students</h1>
+      <p class="text-muted mb-0">View and manage all registered students</p>
+    </div>
+    <a href="/management/dashboard" class="btn btn-outline-secondary">
+      <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+    </a>
+  </div>
+
+  <!-- Messages -->
+  <% if (locals.error_msg) { %>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <i class="fas fa-exclamation-circle me-2"></i><%= error_msg %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  <% } %>
+  
+  <% if (locals.success_msg) { %>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      <i class="fas fa-check-circle me-2"></i><%= success_msg %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  <% } %>
+
+  <!-- Students Table -->
+  <div class="card shadow-sm">
+    <div class="card-header bg-white">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+          <i class="fas fa-user-graduate me-2"></i>Registered Students
+        </h5>
+        <span class="badge bg-primary">
+          <%= students.length %> Students
+        </span>
+      </div>
+    </div>
+    <div class="card-body">
+      <% if (typeof students !== 'undefined' && students.length > 0) { %>
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>Student ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Department</th>
+                <th>Registration Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% students.forEach(student => { %>
+                <tr>
+                  <td>
+                    <span class="badge bg-light text-dark">
+                      <%= student.studentId || 'N/A' %>
+                    </span>
+                  </td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="bg-light rounded-circle p-2 me-3">
+                        <i class="fas fa-user text-primary"></i>
+                      </div>
+                      <div>
+                        <div class="fw-medium"><%= student.name %></div>
+                        <small class="text-muted">Student</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <a href="mailto:<%= student.email %>" class="text-decoration-none">
+                      <%= student.email %>
+                    </a>
+                  </td>
+                  <td>
+                    <%= student.department || 'Not specified' %>
+                  </td>
+                  <td>
+                    <%= new Date(student.createdAt).toLocaleDateString() %>
+                  </td>
+                  <td>
+                    <% if (student.isVerified) { %>
+                      <span class="badge bg-success">Verified</span>
+                    <% } else { %>
+                      <span class="badge bg-warning text-dark">Pending</span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <div class="btn-group" role="group">
+                      <button type="button" class="btn btn-sm btn-outline-primary" 
+                              onclick="viewStudentDetails('<%= student._id %>')">
+                        <i class="fas fa-eye"></i>
+                      </button>
+                      <% if (!student.isVerified) { %>
+                        <button type="button" class="btn btn-sm btn-outline-success" 
+                                onclick="verifyStudent('<%= student._id %>')">
+                          <i class="fas fa-check"></i>
+                        </button>
+                      <% } %>
+                    </div>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <div class="text-center py-5">
+          <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+               style="width: 80px; height: 80px;">
+            <i class="fas fa-user-graduate text-muted fa-2x"></i>
+          </div>
+          <h5 class="mb-2">No Students Found</h5>
+          <p class="text-muted mb-0">No students have registered yet.</p>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<!-- Student Details Modal -->
+<div class="modal fade" id="studentDetailsModal" tabindex="-1" aria-labelledby="studentDetailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="studentDetailsModalLabel">Student Details</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="studentDetailsContent">
+        <!-- Content will be loaded dynamically -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// View student details
+function viewStudentDetails(studentId) {
+  // In a real application, you would fetch student details from the server
+  // For now, we'll show a placeholder
+  const content = `
+    <div class="text-center">
+      <i class="fas fa-user-graduate fa-3x text-primary mb-3"></i>
+      <h5>Loading student details...</h5>
+      <p class="text-muted">Student ID: ${studentId}</p>
+    </div>
+  `;
+  
+  document.getElementById('studentDetailsContent').innerHTML = content;
+  new bootstrap.Modal(document.getElementById('studentDetailsModal')).show();
+}
+
+// Verify student
+function verifyStudent(studentId) {
+  if (confirm('Are you sure you want to verify this student?')) {
+    // In a real application, you would send a request to the server
+    alert('Student verification feature would be implemented here');
+    location.reload();
+  }
+}
+</script>
+
+<%- include('../partials/footer') %>

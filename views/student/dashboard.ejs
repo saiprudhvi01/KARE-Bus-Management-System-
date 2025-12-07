@@ -442,8 +442,8 @@
                                     <% if (typeof buses !== 'undefined' && buses.length > 0) { %>
                                         <% buses.forEach(bus => { %>
                                             <option value="<%= bus._id %>">
-                                                <%= bus.name || 'Bus' %> 
-                                                <% if (bus.busNumber) { %>(<%= bus.busNumber %>)<% } %>
+                                                <%= bus.busName || 'Bus' %> 
+                                                <% if (bus.busId) { %>(<%= bus.busId %>)<% } %>
                                             </option>
                                         <% }); %>
                                     <% } else { %>
@@ -494,8 +494,8 @@
                                     <% if (typeof buses !== 'undefined' && buses.length > 0) { %>
                                         <% buses.forEach(bus => { %>
                                             <option value="<%= bus._id %>">
-                                                <%= bus.name || 'Bus' %> 
-                                                <% if (bus.busNumber) { %>(<%= bus.busNumber %>)<% } %>
+                                                <%= bus.busName || 'Bus' %> 
+                                                <% if (bus.busId) { %>(<%= bus.busId %>)<% } %>
                                             </option>
                                         <% }); %>
                                     <% } else { %>
