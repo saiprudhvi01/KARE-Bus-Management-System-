@@ -1,0 +1,80 @@
+<div class="row justify-content-center mt-5">
+  <div class="col-md-6">
+    <div class="card shadow-lg animate__animated animate__fadeIn">
+      <div class="card-header bg-primary text-white">
+        <h3 class="mb-0"><i class="fas fa-sign-in-alt me-2"></i> <%= title %></h3>
+      </div>
+      <div class="card-body">
+        <% if(typeof error_msg !== 'undefined' && error_msg.length > 0) { %>
+          <div class="alert alert-danger animate__animated animate__shakeX">
+            <%= error_msg %>
+          </div>
+        <% } %>
+        <% if(typeof success_msg !== 'undefined' && success_msg.length > 0) { %>
+          <div class="alert alert-success animate__animated animate__bounceIn">
+            <%= success_msg %>
+          </div>
+        <% } %>
+        
+        <!-- Google Sign In Button -->
+        <% if(userType === 'student') { %>
+          <div class="text-center mb-4">
+            <a href="/auth/google" class="btn btn-outline-primary btn-lg w-100" style="background-color: #fff; color: #757575; border-color: #ddd;">
+              <img src="https://www.google.com/favicon.ico" alt="Google" style="width: 20px; margin-right: 10px;">
+              Continue with Google
+            </a>
+            <div class="divider d-flex align-items-center my-4">
+              <p class="text-center fw-bold mx-3 mb-0 text-muted">OR</p>
+            </div>
+          </div>
+        <% } %>
+        
+        <form action="/auth/login/<%= userType %>" method="POST">
+          <div class="mb-3">
+            <label for="email" class="form-label">Email Address</label>
+            <input type="email" class="form-control" id="email" name="email" required>
+          </div>
+          <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <div class="input-group">
+              <input type="password" class="form-control" id="password" name="password" required>
+              <button class="btn btn-outline-secondary toggle-password" type="button">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </div>
+          <div class="d-grid gap-2 mb-3">
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-sign-in-alt me-2"></i>Login
+            </button>
+          </div>
+        <% if(userType === 'student') { %>
+          <div class="text-center mt-4">
+            <p class="mb-1">Don't have an account? <a href="/signup/<%= userType %>">Sign Up</a></p>
+            <p class="text-muted small mt-2">By signing in, you agree to our Terms of Service and Privacy Policy</p>
+          </div>
+        <% } %>
+        
+        <script>
+          // Toggle password visibility
+          document.querySelectorAll('.toggle-password').forEach(button => {
+            button.addEventListener('click', function() {
+              const passwordInput = this.previousElementSibling;
+              const icon = this.querySelector('i');
+              
+              if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+              } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+              }
+            });
+          });
+        </script>
+      </div>
+    </div>
+  </div>
+</div> 

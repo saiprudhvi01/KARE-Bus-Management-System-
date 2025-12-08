@@ -1,0 +1,36 @@
+// Remove passenger from bus
+router.post('/passengers/remove/:id', ensureDriver, async (req, res) => {
+  try {
+    const request = await BusRequest.findById(req.params.id).populate('bus');
+    
+    if (!request) {
+      return res.status(404).json({ success: false, message: 'Passenger not found' });
+    }
+    
+    // Check if the bus belongs to the current driver
+    if (request.bus.driver.toString() !== req.session.user._id) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+    
+    // Instead of deleting, we'll update the status to 'cancelled' to keep history
+    await BusRequest.findByIdAndUpdate(req.params.id, { status: 'cancelled' });
+    
+    // Get updated passenger count
+    const passengerCount = await BusRequest.countDocuments({
+      bus: request.bus._id,
+      status: 'accepted'
+    });
+    
+    res.json({ 
+      success: true, 
+      message: 'Passenger removed successfully',
+      passengerCount
+    });
+    
+  } catch (error) {
+    console.error('Error removing passenger:', error);
+    res.status(500).json({ success: false, message: 'Error removing passenger' });
+  }
+});
+
+module.exports = router;
