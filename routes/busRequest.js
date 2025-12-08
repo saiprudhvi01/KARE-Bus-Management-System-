@@ -65,6 +65,11 @@ router.post('/request', ensureStudentAPI, async (req, res) => {
 
         await newRequest.save();
 
+        // Attach this request to the student's busRequests list
+        await User.findByIdAndUpdate(req.session.user.id, {
+            $addToSet: { busRequests: newRequest._id }
+        });
+
         // Populate student details for the response
         await newRequest.populate('student', 'name email studentId');
         
@@ -147,6 +152,13 @@ router.post('/:requestId/accept', ensureDriverAPI, async (req, res) => {
         request.status = 'accepted';
         request.responseTime = new Date();
         await request.save();
+
+        // When a request is accepted, assign this bus to the student so it shows on their dashboard
+        await User.findByIdAndUpdate(request.student._id || request.student, {
+            assignedBus: request.bus._id || request.bus,
+            boardingStop: request.boardingStop,
+            $addToSet: { busRequests: request._id }
+        });
 
         // In a real app, you might want to send a notification to the student here
 
