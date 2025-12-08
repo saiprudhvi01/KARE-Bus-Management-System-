@@ -538,6 +538,48 @@ router.get('/reports', ensureManagement, (req, res) => {
   });
 });
 
+// Mark feedback as read (and delete it)
+router.post('/feedback/mark-read/:id', ensureManagement, async (req, res) => {
+  try {
+    const feedback = await Feedback.findById(req.params.id);
+    
+    if (!feedback) {
+      req.flash('error_msg', 'Feedback not found');
+      return res.redirect('/management/feedback');
+    }
+    
+    // Delete the feedback when marked as read
+    await Feedback.findByIdAndDelete(req.params.id);
+    req.flash('success_msg', 'Feedback marked as read and removed');
+    res.redirect('/management/feedback');
+  } catch (err) {
+    console.error('Error marking feedback as read:', err);
+    req.flash('error_msg', 'Failed to update feedback');
+    res.redirect('/management/feedback');
+  }
+});
+
+// Mark complaint as read (and delete it)
+router.post('/complaints/mark-read/:id', ensureManagement, async (req, res) => {
+  try {
+    const complaint = await Complaint.findById(req.params.id);
+    
+    if (!complaint) {
+      req.flash('error_msg', 'Complaint not found');
+      return res.redirect('/management/feedback');
+    }
+    
+    // Delete the complaint when marked as read
+    await Complaint.findByIdAndDelete(req.params.id);
+    req.flash('success_msg', 'Complaint marked as read and removed');
+    res.redirect('/management/feedback');
+  } catch (err) {
+    console.error('Error marking complaint as read:', err);
+    req.flash('error_msg', 'Failed to update complaint');
+    res.redirect('/management/feedback');
+  }
+});
+
 // Add route for marking complaint as resolved
 router.post('/complaints/resolve/:busId/:feedbackId', async (req, res) => {
   try {
