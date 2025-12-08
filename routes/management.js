@@ -485,6 +485,13 @@ router.get('/feedback', ensureManagement, async (req, res) => {
       Complaint.find().sort({ createdAt: -1 }).populate('busId', 'busName busNumber')
     ]);
     
+    console.log('Feedback count:', feedback.length);
+    console.log('Complaints count:', complaints.length);
+    if (feedback.length > 0) {
+      console.log('First feedback item:', feedback[0]);
+      console.log('First feedback readByAdmin:', feedback[0].readByAdmin);
+    }
+    
     res.render('management/feedback', {
       title: 'Feedback & Complaints',
       user: req.session.user,
@@ -567,18 +574,28 @@ router.post('/complaints/update-status/:id', ensureManagement, async (req, res) 
     
     console.log('Complaint update - ID:', id, 'Status:', status, 'Response:', response);
     
-    // If status is being marked as resolved or closed, delete the complaint
-    if (status === 'resolved' || status === 'closed') {
+    // Always delete the complaint if status is being changed to resolved
+    if (status && (status === 'resolved' || status === 'closed')) {
       console.log('Deleting complaint with ID:', id);
-      await Complaint.findByIdAndDelete(id);
+      const deleted = await Complaint.findByIdAndDelete(id);
+      console.log('Deleted complaint:', deleted);
       req.flash('success_msg', 'Complaint marked as resolved and removed');
-    } else {
-      // Otherwise update the complaint
+    } else if (status === 'action_taken' || status === 'investigating') {
+      // Update but don't delete for these statuses
       console.log('Updating complaint with ID:', id, 'to status:', status);
+      await Complaint.findByIdAndUpdate(id, { 
+        status: status,
+        adminResponse: response || '',
+        resolvedAt: null
+      });
+      req.flash('success_msg', 'Complaint status updated successfully');
+    } else {
+      // For 'open' status or any other case
+      console.log('Updating complaint with ID:', id, 'to status:', status || 'open');
       await Complaint.findByIdAndUpdate(id, { 
         status: status || 'open',
         adminResponse: response || '',
-        resolvedAt: status === 'resolved' ? new Date() : null
+        resolvedAt: null
       });
       req.flash('success_msg', 'Complaint status updated successfully');
     }
