@@ -565,12 +565,16 @@ router.post('/complaints/update-status/:id', ensureManagement, async (req, res) 
     const { id } = req.params;
     const { status, response } = req.body;
     
+    console.log('Complaint update - ID:', id, 'Status:', status, 'Response:', response);
+    
     // If status is being marked as resolved or closed, delete the complaint
     if (status === 'resolved' || status === 'closed') {
+      console.log('Deleting complaint with ID:', id);
       await Complaint.findByIdAndDelete(id);
       req.flash('success_msg', 'Complaint marked as resolved and removed');
     } else {
       // Otherwise update the complaint
+      console.log('Updating complaint with ID:', id, 'to status:', status);
       await Complaint.findByIdAndUpdate(id, { 
         status: status || 'open',
         adminResponse: response || '',
