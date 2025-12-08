@@ -10,9 +10,9 @@ const Complaint = require('../models/Complaint');
 // Student Dashboard
 router.get('/dashboard', ensureStudent, async (req, res) => {
   try {
-    // Fetch active buses with necessary fields for the dropdown
-    const buses = await Bus.find({ isActive: true })
-      .select('_id busName busNumber route isActive driverName')
+    // Fetch all buses with necessary fields for the dropdown and booking modal
+    const buses = await Bus.find({})
+      .select('_id busName busNumber route isActive driverName busId')
       .sort({ busName: 1 })
       .lean();
     
