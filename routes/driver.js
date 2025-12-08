@@ -21,15 +21,33 @@ router.get('/dashboard', ensureDriver, async (req, res) => {
       status: 'pending'
     }) : 0;
 
+    // Get feedback and complaints for this driver
+    const [feedback, complaints] = await Promise.all([
+      Feedback.find({ driverId: req.session.user.id }).sort({ createdAt: -1 }),
+      Complaint.find({ driverId: req.session.user.id }).sort({ createdAt: -1 })
+    ]);
+
+    // Get unread feedback count
+    const unreadFeedbackCount = feedback.filter(f => !f.readByDriver).length;
+    
+    // Get open complaints count
+    const openComplaintsCount = complaints.filter(c => c.status === 'open').length;
+
     res.render('driver/dashboard', {
       title: 'Driver Dashboard',
       user: req.session.user,
       bus: bus ? {
         ...bus.toObject(),
-        passengerCount // Include the count in the bus object
+        passengerCount, // Include the count in the bus object
+        feedback: feedback, // Add standalone feedback to bus object
+        complaints: complaints // Add complaints to bus object
       } : null,
       passengerCount,
-      pendingRequests
+      pendingRequests,
+      feedback,
+      complaints,
+      unreadFeedbackCount,
+      openComplaintsCount
     });
   } catch (err) {
     console.error('Error fetching bus data:', err);
@@ -39,7 +57,11 @@ router.get('/dashboard', ensureDriver, async (req, res) => {
       error_msg: 'Failed to load bus data',
       pendingRequests: 0,  // Add default value for error case
       passengerCount: 0,   // Add default value for error case
-      bus: null           // Add null bus for error case
+      bus: null,           // Add null bus for error case
+      feedback: [],
+      complaints: [],
+      unreadFeedbackCount: 0,
+      openComplaintsCount: 0
     });
   }
 });
