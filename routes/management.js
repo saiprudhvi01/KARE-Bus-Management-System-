@@ -559,6 +559,34 @@ router.post('/feedback/mark-read/:id', ensureManagement, async (req, res) => {
   }
 });
 
+// Update complaint status (delete when marked as resolved)
+router.post('/complaints/update-status/:id', ensureManagement, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, response } = req.body;
+    
+    // If status is being marked as resolved or closed, delete the complaint
+    if (status === 'resolved' || status === 'closed') {
+      await Complaint.findByIdAndDelete(id);
+      req.flash('success_msg', 'Complaint marked as resolved and removed');
+    } else {
+      // Otherwise update the complaint
+      await Complaint.findByIdAndUpdate(id, { 
+        status: status || 'open',
+        adminResponse: response || '',
+        resolvedAt: status === 'resolved' ? new Date() : null
+      });
+      req.flash('success_msg', 'Complaint status updated successfully');
+    }
+    
+    res.redirect('/management/feedback');
+  } catch (err) {
+    console.error('Error updating complaint:', err);
+    req.flash('error_msg', 'Failed to update complaint');
+    res.redirect('/management/feedback');
+  }
+});
+
 // Mark complaint as read (and delete it)
 router.post('/complaints/mark-read/:id', ensureManagement, async (req, res) => {
   try {
