@@ -389,9 +389,10 @@ router.post('/send-feedback', ensureStudent, async (req, res) => {
       const bus = await Bus.findById(busId);
       if (bus) {
         feedback.busId = bus._id;
-        feedback.busName = bus.name || bus.busName;
+        feedback.busName = bus.busName;
         feedback.busNumber = bus.busNumber;
-        feedback.driverId = bus.driverId || bus._id;
+        // Link feedback to the actual driver user so driver views can query by driverId
+        feedback.driverId = bus.driver || null;
         feedback.driverName = bus.driverName || 'Unknown Driver';
       }
     }
@@ -456,9 +457,10 @@ router.post('/send-complaint', ensureStudent, async (req, res) => {
       const bus = await Bus.findById(busId);
       if (bus) {
         complaint.busId = bus._id;
-        complaint.busName = bus.name || bus.busName;
+        complaint.busName = bus.busName;
         complaint.busNumber = bus.busNumber;
-        complaint.driverId = bus.driverId || bus._id;
+        // Link complaint to the actual driver user
+        complaint.driverId = bus.driver || null;
         complaint.driverName = bus.driverName || 'Unknown Driver';
       }
     }

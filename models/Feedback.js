@@ -16,7 +16,7 @@ const FeedbackSchema = new mongoose.Schema({
   },
   driverId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Bus',
+    ref: 'User',
     default: null
   },
   driverName: {
