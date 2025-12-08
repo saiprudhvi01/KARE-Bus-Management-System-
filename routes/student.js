@@ -443,7 +443,7 @@ router.post('/send-complaint', ensureStudent, async (req, res) => {
       studentId: req.session.user._id,
       studentName: isAnonymous ? 'Anonymous Student' : req.session.user.name,
       isAnonymous: !!isAnonymous,
-      status: 'pending',
+      status: 'open',
       createdAt: new Date(),
       busId: null,
       busName: 'N/A',
