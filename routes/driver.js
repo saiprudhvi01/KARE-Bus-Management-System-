@@ -3,6 +3,7 @@ const router = express.Router();
 const { ensureAuthenticated, ensureDriver } = require('../config/auth');
 const Bus = require('../models/Bus');
 const Feedback = require('../models/Feedback');
+const Complaint = require('../models/Complaint');
 const BusRequest = require('../models/BusRequest');
 
 // Driver Dashboard
@@ -160,6 +161,24 @@ router.get('/feedback', ensureDriver, async (req, res) => {
   } catch (err) {
     console.error('Error fetching feedback:', err);
     req.flash('error_msg', 'Failed to load feedback');
+    res.redirect('/driver/dashboard');
+  }
+});
+
+// View complaints about this driver's buses
+router.get('/complaints', ensureDriver, async (req, res) => {
+  try {
+    // Load all complaints assigned to this driver
+    const complaints = await Complaint.find({ driverId: req.session.user.id }).sort({ createdAt: -1 });
+    
+    res.render('driver/complaints', {
+      title: 'Student Complaints',
+      user: req.session.user,
+      complaints
+    });
+  } catch (err) {
+    console.error('Error fetching complaints:', err);
+    req.flash('error_msg', 'Failed to load complaints');
     res.redirect('/driver/dashboard');
   }
 });
