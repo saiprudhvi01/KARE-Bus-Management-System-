@@ -480,25 +480,26 @@ router.post('/students/assign-bus', ensureManagement, async (req, res) => {
 // View Feedback and Complaints
 router.get('/feedback', ensureManagement, async (req, res) => {
   try {
-    const [feedback, complaints] = await Promise.all([
-      Feedback.find().sort({ createdAt: -1 }).populate('busId', 'busName busNumber'),
-      Complaint.find().sort({ createdAt: -1 }).populate('busId', 'busName busNumber')
-    ]);
-    
+    const complaints = await Complaint.find().sort({ createdAt: -1 });
+    const feedback = await Feedback.find().sort({ createdAt: -1 });
+
     res.render('management/feedback', {
       title: 'Feedback & Complaints',
       user: req.session.user,
-      feedback,
       complaints,
-      messages: {
-        success: req.flash('success_msg'),
-        error: req.flash('error_msg')
-      }
+      feedback,
+      success_msg: req.flash('success_msg'),
+      error_msg: req.flash('error_msg'),
     });
   } catch (err) {
     console.error('Error fetching feedback:', err);
-    req.flash('error_msg', 'Failed to load feedback and complaints');
-    res.redirect('/management/dashboard');
+    res.render('management/feedback', {
+      title: 'Feedback & Complaints',
+      user: req.session.user,
+      complaints: [],
+      feedback: [],
+      error_msg: 'Failed to load data',
+    });
   }
 });
 
