@@ -145,11 +145,14 @@ router.get('/profile', ensureDriver, (req, res) => {
 // View all feedback
 router.get('/feedback', ensureDriver, async (req, res) => {
   try {
-    // Get the driver's bus ID from session
-    const driverId = req.session.user.id;
-    
-    // Find all feedback for this driver
-    const feedback = await Feedback.find({ driverId }).sort({ createdAt: -1 });
+    // Find the bus assigned to this driver
+    const bus = await Bus.findOne({ driver: req.session.user.id });
+
+    let feedback = [];
+    if (bus) {
+      // Load all feedback records linked to this bus
+      feedback = await Feedback.find({ busId: bus._id }).sort({ createdAt: -1 });
+    }
     
     res.render('driver/feedback', {
       title: 'Student Feedback',
