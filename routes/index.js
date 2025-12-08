@@ -83,6 +83,13 @@ router.get('/signup/student', (req, res) => {
     return res.redirect('/student/dashboard');
   }
   
+  // If logged in as management, logout and redirect to main home page
+  if (req.session.user && req.session.user.role === 'management') {
+    req.session.destroy();
+    req.flash('success_msg', 'You have been logged out successfully.');
+    return res.redirect('/');
+  }
+  
   res.render('signup', { 
     title: 'Student Signup',
     userType: 'student'
