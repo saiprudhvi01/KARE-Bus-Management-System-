@@ -149,10 +149,8 @@ router.get('/feedback', ensureDriver, async (req, res) => {
     const bus = await Bus.findOne({ driver: req.session.user.id });
 
     let feedback = [];
-    if (bus) {
-      // Load all feedback records linked to this bus
-      feedback = await Feedback.find({ busId: bus._id }).sort({ createdAt: -1 });
-    }
+    // Load all feedback records assigned to this driver
+    feedback = await Feedback.find({ driverId: req.session.user.id }).sort({ createdAt: -1 });
     
     res.render('driver/feedback', {
       title: 'Student Feedback',

@@ -25,11 +25,34 @@ router.get('/dashboard', async (req, res) => {
     // Create empty reports array (can be populated with real reports later)
     const reports = [];
     
-    // Collect and process all feedback
+    // Collect and process all feedback from both Bus model and standalone Feedback model
     let allFeedback = [];
     let studentComplaints = [];
     
-    // Process each bus to extract feedback
+    // Process feedback from standalone Feedback model
+    const standaloneFeedback = await Feedback.find({}).sort({ createdAt: -1 });
+    standaloneFeedback.forEach(item => {
+      const feedbackItem = {
+        ...item.toObject(),
+        bus: {
+          busId: item.busName || 'General',
+          busName: item.busName || 'General Feedback',
+          driverName: item.driverName || 'N/A',
+          _id: item.busId
+        }
+      };
+      
+      // Separate into complaints (based on subject/content) and positive feedback
+      if (item.subject && (item.subject.toLowerCase().includes('complaint') || 
+          item.subject.toLowerCase().includes('issue') || 
+          item.subject.toLowerCase().includes('problem'))) {
+        studentComplaints.push(feedbackItem);
+      } else {
+        allFeedback.push(feedbackItem);
+      }
+    });
+    
+    // Process feedback embedded in Bus model (legacy)
     for (const bus of buses) {
       if (bus.feedback && bus.feedback.length > 0) {
         // Add bus info to each feedback item for context
@@ -561,73 +584,6 @@ router.post('/complaints/resolve/:busId/:feedbackId', async (req, res) => {
     // For regular form submissions
     req.flash('error', 'Error resolving complaint.');
     res.redirect('/management/dashboard');
-  }
-});
-
-// View all feedback and complaints
-router.get('/feedback', ensureManagement, async (req, res) => {
-  try {
-    // Fetch all feedback and complaints
-    const feedback = await Feedback.find({}).sort({ createdAt: -1 });
-    const complaints = await Complaint.find({}).sort({ createdAt: -1 });
-    
-    res.render('management/feedback', {
-      title: 'Student Feedback & Complaints',
-      user: req.session.user,
-      feedback,
-      complaints
-    });
-  } catch (err) {
-    console.error('Error fetching feedback and complaints:', err);
-    req.flash('error_msg', 'Failed to load feedback and complaints');
-    res.redirect('/management/dashboard');
-  }
-});
-
-// Mark feedback as read
-router.post('/feedback/mark-read/:id', ensureManagement, async (req, res) => {
-  try {
-    const feedback = await Feedback.findById(req.params.id);
-    
-    if (!feedback) {
-      req.flash('error_msg', 'Feedback not found');
-      return res.redirect('/management/feedback');
-    }
-    
-    feedback.readByAdmin = true;
-    await feedback.save();
-    
-    req.flash('success_msg', 'Feedback marked as read');
-    res.redirect('/management/feedback');
-  } catch (err) {
-    console.error('Error marking feedback as read:', err);
-    req.flash('error_msg', 'Failed to update feedback');
-    res.redirect('/management/feedback');
-  }
-});
-
-// Update complaint status
-router.post('/complaints/update-status/:id', ensureManagement, async (req, res) => {
-  try {
-    const { status, adminResponse } = req.body;
-    const complaint = await Complaint.findById(req.params.id);
-    
-    if (!complaint) {
-      req.flash('error_msg', 'Complaint not found');
-      return res.redirect('/management/feedback');
-    }
-    
-    complaint.status = status;
-    complaint.adminResponse = adminResponse;
-    complaint.readByAdmin = true;
-    await complaint.save();
-    
-    req.flash('success_msg', 'Complaint updated successfully');
-    res.redirect('/management/feedback');
-  } catch (err) {
-    console.error('Error updating complaint:', err);
-    req.flash('error_msg', 'Failed to update complaint');
-    res.redirect('/management/feedback');
   }
 });
 
