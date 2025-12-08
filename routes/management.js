@@ -502,44 +502,30 @@ router.get('/feedback', ensureManagement, async (req, res) => {
   }
 });
 
-// Update feedback status
+// Update feedback status (delete when marked as resolved/read)
 router.post('/feedback/update-status/:id', ensureManagement, async (req, res) => {
   try {
     const { id } = req.params;
     const { status, response } = req.body;
     
-    await Feedback.findByIdAndUpdate(id, { 
-      status: status || 'pending',
-      adminResponse: response || '',
-      respondedAt: new Date()
-    });
-    
-    req.flash('success_msg', 'Feedback status updated successfully');
-    res.redirect('/management/feedback');
-  } catch (err) {
-    console.error('Error updating feedback status:', err);
-    req.flash('error_msg', 'Failed to update feedback status');
-    res.redirect('/management/feedback');
-  }
-});
+    // If status is being marked as resolved or read, delete the feedback
+    if (status === 'resolved' || req.body.markAsRead) {
+      await Feedback.findByIdAndDelete(id);
+      req.flash('success_msg', 'Feedback marked as read and removed');
+    } else {
+      // Otherwise update the feedback
+      await Feedback.findByIdAndUpdate(id, { 
+        status: status || 'pending',
+        adminResponse: response || '',
+        respondedAt: new Date()
+      });
+      req.flash('success_msg', 'Complaint status updated successfully');
+    }
 
-// Update complaint status
-router.post('/complaints/update-status/:id', ensureManagement, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status, response } = req.body;
-    
-    await Complaint.findByIdAndUpdate(id, { 
-      status: status || 'pending',
-      adminResponse: response || '',
-      resolvedAt: status === 'resolved' ? new Date() : null
-    });
-    
-    req.flash('success_msg', 'Complaint status updated successfully');
     res.redirect('/management/feedback');
   } catch (err) {
-    console.error('Error updating complaint status:', err);
-    req.flash('error_msg', 'Failed to update complaint status');
+    console.error('Error updating complaint:', err);
+    req.flash('error_msg', 'Failed to update complaint');
     res.redirect('/management/feedback');
   }
 });
