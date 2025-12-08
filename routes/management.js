@@ -587,6 +587,40 @@ router.post('/complaints/update-status/:id', ensureManagement, async (req, res) 
   }
 });
 
+// Delete feedback
+router.post('/feedback/delete/:id', ensureManagement, async (req, res) => {
+  try {
+    const feedback = await Feedback.findByIdAndDelete(req.params.id);
+    if (!feedback) {
+      req.flash('error_msg', 'Feedback not found');
+    } else {
+      req.flash('success_msg', 'Feedback deleted successfully');
+    }
+    res.redirect('/management/feedback');
+  } catch (err) {
+    console.error('Error deleting feedback:', err);
+    req.flash('error_msg', 'Failed to delete feedback');
+    res.redirect('/management/feedback');
+  }
+});
+
+// Delete complaint
+router.post('/complaints/delete/:id', ensureManagement, async (req, res) => {
+  try {
+    const complaint = await Complaint.findByIdAndDelete(req.params.id);
+    if (!complaint) {
+      req.flash('error_msg', 'Complaint not found');
+    } else {
+      req.flash('success_msg', 'Complaint deleted successfully');
+    }
+    res.redirect('/management/feedback');
+  } catch (err) {
+    console.error('Error deleting complaint:', err);
+    req.flash('error_msg', 'Failed to delete complaint');
+    res.redirect('/management/feedback');
+  }
+});
+
 // Mark complaint as read (and delete it)
 router.post('/complaints/mark-read/:id', ensureManagement, async (req, res) => {
   try {
