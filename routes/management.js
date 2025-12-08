@@ -52,6 +52,22 @@ router.get('/dashboard', async (req, res) => {
       }
     });
     
+    // Process complaints from standalone Complaint model
+    const standaloneComplaints = await Complaint.find({}).sort({ createdAt: -1 });
+    standaloneComplaints.forEach(item => {
+      const complaintItem = {
+        ...item.toObject(),
+        bus: {
+          busId: item.busName || 'General',
+          busName: item.busName || 'N/A',
+          driverName: item.driverName || 'N/A',
+          _id: item.busId
+        }
+      };
+      
+      studentComplaints.push(complaintItem);
+    });
+    
     // Process feedback embedded in Bus model (legacy)
     for (const bus of buses) {
       if (bus.feedback && bus.feedback.length > 0) {
