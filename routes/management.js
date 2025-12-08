@@ -485,13 +485,6 @@ router.get('/feedback', ensureManagement, async (req, res) => {
       Complaint.find().sort({ createdAt: -1 }).populate('busId', 'busName busNumber')
     ]);
     
-    console.log('Feedback count:', feedback.length);
-    console.log('Complaints count:', complaints.length);
-    if (feedback.length > 0) {
-      console.log('First feedback item:', feedback[0]);
-      console.log('First feedback readByAdmin:', feedback[0].readByAdmin);
-    }
-    
     res.render('management/feedback', {
       title: 'Feedback & Complaints',
       user: req.session.user,
@@ -572,26 +565,12 @@ router.post('/complaints/update-status/:id', ensureManagement, async (req, res) 
     const { id } = req.params;
     const { status, response } = req.body;
     
-    console.log('Complaint update - ID:', id, 'Status:', status, 'Response:', response);
-    
-    // Always delete the complaint if status is being changed to resolved
-    if (status && (status === 'resolved' || status === 'closed')) {
-      console.log('Deleting complaint with ID:', id);
-      const deleted = await Complaint.findByIdAndDelete(id);
-      console.log('Deleted complaint:', deleted);
+    // Delete the complaint if status is being changed to resolved or closed
+    if (status === 'resolved' || status === 'closed') {
+      await Complaint.findByIdAndDelete(id);
       req.flash('success_msg', 'Complaint marked as resolved and removed');
-    } else if (status === 'action_taken' || status === 'investigating') {
-      // Update but don't delete for these statuses
-      console.log('Updating complaint with ID:', id, 'to status:', status);
-      await Complaint.findByIdAndUpdate(id, { 
-        status: status,
-        adminResponse: response || '',
-        resolvedAt: null
-      });
-      req.flash('success_msg', 'Complaint status updated successfully');
     } else {
-      // For 'open' status or any other case
-      console.log('Updating complaint with ID:', id, 'to status:', status || 'open');
+      // Update the complaint for other statuses
       await Complaint.findByIdAndUpdate(id, { 
         status: status || 'open',
         adminResponse: response || '',
